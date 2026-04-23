@@ -1,0 +1,560 @@
+{
+  "info": {
+    "name": "Single-Route Blog Platform",
+    "description": "Full test collection for the Role-Based Blog Platform with Secret-Key Controlled API Access.\n\nBase URL: http://localhost:5005\n\n**Flow:**\n1. Register Admin\n2. Admin Login (saves adminToken automatically)\n3. Admin creates Writer\n4. Writer Login (saves writerToken automatically)\n5. User Register → User Login (saves userToken automatically)\n6. Test blog CRUD via single /blog endpoint",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",               "value": "http://localhost:5005",          "type": "string" },
+    { "key": "adminToken",            "value": "",                               "type": "string" },
+    { "key": "adminRefreshToken",     "value": "",                               "type": "string" },
+    { "key": "writerToken",           "value": "",                               "type": "string" },
+    { "key": "writerRefreshToken",    "value": "",                               "type": "string" },
+    { "key": "userToken",             "value": "",                               "type": "string" },
+    { "key": "userRefreshToken",      "value": "",                               "type": "string" },
+    { "key": "adminSecretKey",        "value": "admin-super-secret-key-2024",    "type": "string" },
+    { "key": "writerSecretKey",       "value": "writer-super-secret-key-2024",   "type": "string" },
+    { "key": "blogId",                "value": "",                               "type": "string" },
+    { "key": "categoryId",            "value": "",                               "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔐 Admin",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/register", "host": ["{{baseUrl}}"], "path": ["admin","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminName\": \"Super Admin\",\n  \"email\": \"admin@blog.com\",\n  \"password\": \"Admin@1234\",\n  \"phone\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', json.accessToken);",
+                  "  pm.collectionVariables.set('adminRefreshToken', json.refreshToken);",
+                  "  console.log('Admin token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/login", "host": ["{{baseUrl}}"], "path": ["admin","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@blog.com\",\n  \"password\": \"Admin@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Admin Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/refresh-token", "host": ["{{baseUrl}}"], "path": ["admin","refresh-token"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{adminRefreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/logout", "host": ["{{baseUrl}}"], "path": ["admin","logout"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        },
+        {
+          "name": "Update Admin Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/update-password", "host": ["{{baseUrl}}"], "path": ["admin","update-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Admin@1234\",\n  \"newPassword\": \"Admin@5678\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Writer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/create-writer", "host": ["{{baseUrl}}"], "path": ["admin","create-writer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"writerName\": \"John Writer\",\n  \"email\": \"writer@blog.com\",\n  \"password\": \"Writer@1234\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔐 Admin — Blog (Single Endpoint)",
+      "item": [
+        {
+          "name": "Get All Blogs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog", "host": ["{{baseUrl}}"], "path": ["admin","blog"] }
+          }
+        },
+        {
+          "name": "Get Single Blog (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","{{blogId}}"] }
+          }
+        },
+        {
+          "name": "Create Blog (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data._id) {",
+                  "  pm.collectionVariables.set('blogId', json.data._id);",
+                  "  console.log('blogId saved:', json.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog", "host": ["{{baseUrl}}"], "path": ["admin","blog"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My First Admin Blog\",\n  \"content\": \"This is the full content of the blog written by admin.\",\n  \"excerpt\": \"Short description here\",\n  \"category\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Blog (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","{{blogId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Blog Title\",\n  \"status\": \"published\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Blog (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","{{blogId}}"] }
+          }
+        },
+        {
+          "name": "Approve Blog",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog/approval/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","approval","{{blogId}}"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        },
+        {
+          "name": "Reject Blog",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "x-secret-key",  "value": "{{adminSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/blog/reject/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","reject","{{blogId}}"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📂 Admin — Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/category", "host": ["{{baseUrl}}"], "path": ["admin","category"] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data._id) {",
+                  "  pm.collectionVariables.set('categoryId', json.data._id);",
+                  "  console.log('categoryId saved:', json.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/category", "host": ["{{baseUrl}}"], "path": ["admin","category"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Technology\",\n  \"description\": \"Tech related blogs\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/category/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["admin","category","{{categoryId}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "✍️ Writer",
+      "item": [
+        {
+          "name": "Login Writer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('writerToken', json.accessToken);",
+                  "  pm.collectionVariables.set('writerRefreshToken', json.refreshToken);",
+                  "  console.log('Writer token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/writer/login", "host": ["{{baseUrl}}"], "path": ["writer","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"writer@blog.com\",\n  \"password\": \"Writer@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Writer Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('writerToken', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/writer/refresh-token", "host": ["{{baseUrl}}"], "path": ["writer","refresh-token"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{writerRefreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout Writer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{writerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/writer/logout", "host": ["{{baseUrl}}"], "path": ["writer","logout"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "✍️ Writer — Blog (Single Endpoint)",
+      "item": [
+        {
+          "name": "Get My Blogs (Writer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{writerToken}}" },
+              { "key": "x-secret-key",  "value": "{{writerSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/writer/blog", "host": ["{{baseUrl}}"], "path": ["writer","blog"] }
+          }
+        },
+        {
+          "name": "Get Single My Blog (Writer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{writerToken}}" },
+              { "key": "x-secret-key",  "value": "{{writerSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/writer/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["writer","blog","{{blogId}}"] }
+          }
+        },
+        {
+          "name": "Create Blog (Writer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data._id) {",
+                  "  pm.collectionVariables.set('blogId', json.data._id);",
+                  "  console.log('blogId saved:', json.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{writerToken}}" },
+              { "key": "x-secret-key",  "value": "{{writerSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/writer/blog", "host": ["{{baseUrl}}"], "path": ["writer","blog"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Writer Blog Post\",\n  \"content\": \"This is the full content written by a writer. Pending admin approval.\",\n  \"excerpt\": \"Short description\",\n  \"category\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Blog (Writer)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{writerToken}}" },
+              { "key": "x-secret-key",  "value": "{{writerSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/writer/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["writer","blog","{{blogId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Writer Blog Title\",\n  \"content\": \"Updated content goes here.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Blog (Writer)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{writerToken}}" },
+              { "key": "x-secret-key",  "value": "{{writerSecretKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/writer/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["writer","blog","{{blogId}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/user/register", "host": ["{{baseUrl}}"], "path": ["user","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"Alice Reader\",\n  \"email\": \"user@blog.com\",\n  \"password\": \"User@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('userToken', json.accessToken);",
+                  "  pm.collectionVariables.set('userRefreshToken', json.refreshToken);",
+                  "  console.log('User token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/user/login", "host": ["{{baseUrl}}"], "path": ["user","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@blog.com\",\n  \"password\": \"User@1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh User Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('userToken', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/user/refresh-token", "host": ["{{baseUrl}}"], "path": ["user","refresh-token"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{userRefreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": { "raw": "{{baseUrl}}/user/logout", "host": ["{{baseUrl}}"], "path": ["user","logout"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User — Public Blog (Single Endpoint)",
+      "item": [
+        {
+          "name": "Get All Published Blogs (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/user/blog", "host": ["{{baseUrl}}"], "path": ["user","blog"] }
+          }
+        },
+        {
+          "name": "Get Single Published Blog (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/user/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["user","blog","{{blogId}}"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}
