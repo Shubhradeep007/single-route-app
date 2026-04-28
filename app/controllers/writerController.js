@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const WriterModel = require('../models/writer')
 const BlogModel = require('../models/blog')
+const CategoryModel = require('../models/category')
 const mongoose = require('mongoose')
 const { notifyAdmins } = require('../config/websocket')
 
@@ -48,6 +49,23 @@ const buildBlogPipeline = (matchStage = null) => {
 }
 
 class writerController {
+  async writerRegister(req, res) {
+    try {
+      const { writerName, email, password } = req.body
+      if (!writerName || !email || !password) {
+        return res.status(400).json({ success: false, message: 'All fields are required' })
+      }
+      const exists = await WriterModel.findOne({ email })
+      if (exists) return res.status(409).json({ success: false, message: 'Email already registered' })
+      const hashed = await bcrypt.hash(password, 10)
+      const hashedApiKey = await bcrypt.hash(process.env.WRITER_BLOG_API_SECRET_KEY, 10)
+      await WriterModel.create({ writerName, email, password: hashed, apiKey: hashedApiKey })
+      return res.status(201).json({ success: true, message: 'Writer registered successfully' })
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message })
+    }
+  }
+
   async writerLogin(req, res) {
     try {
       const { email, password } = req.body
@@ -158,6 +176,15 @@ class writerController {
       }
     } catch (err) {
       return res.status(500).json({ success: false, message: 'Something went wrong', error: err.message })
+    }
+  }
+
+  async getCategories(req, res) {
+    try {
+      const categories = await CategoryModel.find({ isActive: true }).sort({ name: 1 })
+      return res.status(200).json({ success: true, count: categories.length, data: categories })
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message })
     }
   }
 }

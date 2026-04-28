@@ -3,6 +3,9 @@ const router = express.Router()
 const writerController = require('../controllers/writerController')
 const { writerAuthCheck, verifyWriterApiKey } = require('../middleware/writerAuthCheck')
 
+router.route('/register')
+  .post(writerController.writerRegister)
+
 router.route('/login')
   .post(writerController.writerLogin)
 
@@ -20,5 +23,8 @@ router.route('/blog/:id')
   .get(writerAuthCheck, verifyWriterApiKey, writerController.blogOperations)
   .put(writerAuthCheck, verifyWriterApiKey, writerController.blogOperations)
   .delete(writerAuthCheck, verifyWriterApiKey, writerController.blogOperations)
+
+router.route('/category')
+  .get(writerAuthCheck, writerController.getCategories)
 
 module.exports = router

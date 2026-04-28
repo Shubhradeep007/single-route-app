@@ -15,7 +15,6 @@ const BlogSchema = new mongoose.Schema(
       enum: ["draft", "pending", "published", "rejected"],
       default: "draft",
     },
-    // Author can be Admin or Writer
     author: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
@@ -32,6 +31,12 @@ const BlogSchema = new mongoose.Schema(
       ref: "Admin",
       default: null,
     },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true, versionKey: false },
 );

@@ -15,9 +15,6 @@ router.route('/logout')
 router.route('/refresh-token')
   .post(adminController.adminRefreshToken)
 
-router.route('/create-writer')
-  .post(adminAuthCheck, adminController.writerRegister)
-
 router.route('/update-password')
   .post(adminAuthCheck, adminController.adminPasswordUpdate)
 

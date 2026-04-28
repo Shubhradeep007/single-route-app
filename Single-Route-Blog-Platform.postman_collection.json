@@ -1,26 +1,27 @@
 {
   "info": {
-    "name": "Single-Route Blog Platform",
-    "description": "Full test collection for the Role-Based Blog Platform with Secret-Key Controlled API Access.\n\nBase URL: http://localhost:5005\n\n**Flow:**\n1. Register Admin\n2. Admin Login (saves adminToken automatically)\n3. Admin creates Writer\n4. Writer Login (saves writerToken automatically)\n5. User Register → User Login (saves userToken automatically)\n6. Test blog CRUD via single /blog endpoint",
+    "name": "Single-Route Blog Platform (Updated)",
+    "description": "Full test collection for the Role-Based Blog Platform with Secret-Key Controlled API Access.\n\nBase URL: http://localhost:5005\n\n**Recommended Flow:**\n1. Register Admin → Login Admin\n2. Register Writer → Login Writer\n3. Register User → Login User\n4. Admin: Create Category\n5. Writer: Create Blog (auto-saved as blogId)\n6. Admin: Approve Blog\n7. User: Like Blog / Comment on Blog\n8. Public: View published blogs",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl",               "value": "http://localhost:5005",          "type": "string" },
-    { "key": "adminToken",            "value": "",                               "type": "string" },
-    { "key": "adminRefreshToken",     "value": "",                               "type": "string" },
-    { "key": "writerToken",           "value": "",                               "type": "string" },
-    { "key": "writerRefreshToken",    "value": "",                               "type": "string" },
-    { "key": "userToken",             "value": "",                               "type": "string" },
-    { "key": "userRefreshToken",      "value": "",                               "type": "string" },
-    { "key": "adminSecretKey",        "value": "admin-super-secret-key-2024",    "type": "string" },
-    { "key": "writerSecretKey",       "value": "writer-super-secret-key-2024",   "type": "string" },
-    { "key": "blogId",                "value": "",                               "type": "string" },
-    { "key": "categoryId",            "value": "",                               "type": "string" }
+    { "key": "baseUrl",            "value": "http://localhost:5005",           "type": "string" },
+    { "key": "adminToken",         "value": "",                                "type": "string" },
+    { "key": "adminRefreshToken",  "value": "",                                "type": "string" },
+    { "key": "writerToken",        "value": "",                                "type": "string" },
+    { "key": "writerRefreshToken", "value": "",                                "type": "string" },
+    { "key": "userToken",          "value": "",                                "type": "string" },
+    { "key": "userRefreshToken",   "value": "",                                "type": "string" },
+    { "key": "adminSecretKey",     "value": "admin-super-secret-key-2024",     "type": "string" },
+    { "key": "writerSecretKey",    "value": "writer-super-secret-key-2024",    "type": "string" },
+    { "key": "blogId",             "value": "",                                "type": "string" },
+    { "key": "categoryId",         "value": "",                                "type": "string" },
+    { "key": "commentId",          "value": "",                                "type": "string" }
   ],
   "item": [
 
     {
-      "name": "🔐 Admin",
+      "name": "🔐 Admin — Auth",
       "item": [
         {
           "name": "Register Admin",
@@ -45,7 +46,7 @@
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('adminToken', json.accessToken);",
                   "  pm.collectionVariables.set('adminRefreshToken', json.refreshToken);",
-                  "  console.log('Admin token saved');",
+                  "  console.log('✅ Admin token saved');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -72,6 +73,7 @@
                   "const json = pm.response.json();",
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('adminToken', json.accessToken);",
+                  "  console.log('✅ Admin token refreshed');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -92,9 +94,7 @@
           "name": "Logout Admin",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
             "url": { "raw": "{{baseUrl}}/admin/logout", "host": ["{{baseUrl}}"], "path": ["admin","logout"] },
             "body": { "mode": "raw", "raw": "" }
           }
@@ -111,21 +111,6 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"Admin@1234\",\n  \"newPassword\": \"Admin@5678\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Create Writer",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/admin/create-writer", "host": ["{{baseUrl}}"], "path": ["admin","create-writer"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"writerName\": \"John Writer\",\n  \"email\": \"writer@blog.com\",\n  \"password\": \"Writer@1234\"\n}"
             }
           }
         }
@@ -167,7 +152,7 @@
                   "const json = pm.response.json();",
                   "if (json.data && json.data._id) {",
                   "  pm.collectionVariables.set('blogId', json.data._id);",
-                  "  console.log('blogId saved:', json.data._id);",
+                  "  console.log('✅ blogId saved:', json.data._id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -184,7 +169,7 @@
             "url": { "raw": "{{baseUrl}}/admin/blog", "host": ["{{baseUrl}}"], "path": ["admin","blog"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"My First Admin Blog\",\n  \"content\": \"This is the full content of the blog written by admin.\",\n  \"excerpt\": \"Short description here\",\n  \"category\": null\n}"
+              "raw": "{\n  \"title\": \"Admin Blog Post\",\n  \"content\": \"This is admin-created blog content.\",\n  \"excerpt\": \"Short description\",\n  \"category\": null\n}"
             }
           }
         },
@@ -200,7 +185,7 @@
             "url": { "raw": "{{baseUrl}}/admin/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["admin","blog","{{blogId}}"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Blog Title\",\n  \"status\": \"published\"\n}"
+              "raw": "{\n  \"title\": \"Updated Blog Title by Admin\",\n  \"status\": \"published\"\n}"
             }
           }
         },
@@ -216,7 +201,7 @@
           }
         },
         {
-          "name": "Approve Blog",
+          "name": "Approve & Publish Blog",
           "request": {
             "method": "POST",
             "header": [
@@ -246,12 +231,10 @@
       "name": "📂 Admin — Categories",
       "item": [
         {
-          "name": "Get All Categories",
+          "name": "Get All Categories (Admin)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
             "url": { "raw": "{{baseUrl}}/admin/category", "host": ["{{baseUrl}}"], "path": ["admin","category"] }
           }
         },
@@ -265,7 +248,7 @@
                   "const json = pm.response.json();",
                   "if (json.data && json.data._id) {",
                   "  pm.collectionVariables.set('categoryId', json.data._id);",
-                  "  console.log('categoryId saved:', json.data._id);",
+                  "  console.log('✅ categoryId saved:', json.data._id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -281,17 +264,15 @@
             "url": { "raw": "{{baseUrl}}/admin/category", "host": ["{{baseUrl}}"], "path": ["admin","category"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Technology\",\n  \"description\": \"Tech related blogs\"\n}"
+              "raw": "{\n  \"name\": \"Technology\",\n  \"description\": \"Tech-related blogs\"\n}"
             }
           }
         },
         {
-          "name": "Delete Category",
+          "name": "Delete (Deactivate) Category",
           "request": {
             "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
             "url": { "raw": "{{baseUrl}}/admin/category/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["admin","category","{{categoryId}}"] }
           }
         }
@@ -299,8 +280,20 @@
     },
 
     {
-      "name": "✍️ Writer",
+      "name": "✍️ Writer — Auth",
       "item": [
+        {
+          "name": "Register Writer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/writer/register", "host": ["{{baseUrl}}"], "path": ["writer","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"writerName\": \"John Writer\",\n  \"email\": \"writer@blog.com\",\n  \"password\": \"Writer@1234\"\n}"
+            }
+          }
+        },
         {
           "name": "Login Writer",
           "event": [
@@ -312,7 +305,7 @@
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('writerToken', json.accessToken);",
                   "  pm.collectionVariables.set('writerRefreshToken', json.refreshToken);",
-                  "  console.log('Writer token saved');",
+                  "  console.log('✅ Writer token saved');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -339,6 +332,7 @@
                   "const json = pm.response.json();",
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('writerToken', json.accessToken);",
+                  "  console.log('✅ Writer token refreshed');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -402,7 +396,7 @@
                   "const json = pm.response.json();",
                   "if (json.data && json.data._id) {",
                   "  pm.collectionVariables.set('blogId', json.data._id);",
-                  "  console.log('blogId saved:', json.data._id);",
+                  "  console.log('✅ blogId saved:', json.data._id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -419,7 +413,7 @@
             "url": { "raw": "{{baseUrl}}/writer/blog", "host": ["{{baseUrl}}"], "path": ["writer","blog"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"My Writer Blog Post\",\n  \"content\": \"This is the full content written by a writer. Pending admin approval.\",\n  \"excerpt\": \"Short description\",\n  \"category\": null\n}"
+              "raw": "{\n  \"title\": \"My Writer Blog Post\",\n  \"content\": \"This is content written by a writer. It goes to pending status for admin approval.\",\n  \"excerpt\": \"Short summary of the blog\",\n  \"category\": \"{{categoryId}}\"\n}"
             }
           }
         },
@@ -435,7 +429,7 @@
             "url": { "raw": "{{baseUrl}}/writer/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["writer","blog","{{blogId}}"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated Writer Blog Title\",\n  \"content\": \"Updated content goes here.\"\n}"
+              "raw": "{\n  \"title\": \"Updated Writer Blog Title\",\n  \"content\": \"Updated blog content goes here.\"\n}"
             }
           }
         },
@@ -454,7 +448,21 @@
     },
 
     {
-      "name": "👤 User",
+      "name": "✍️ Writer — Categories",
+      "item": [
+        {
+          "name": "Get All Categories (Writer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{writerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/writer/category", "host": ["{{baseUrl}}"], "path": ["writer","category"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User — Auth",
       "item": [
         {
           "name": "Register User",
@@ -479,7 +487,7 @@
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('userToken', json.accessToken);",
                   "  pm.collectionVariables.set('userRefreshToken', json.refreshToken);",
-                  "  console.log('User token saved');",
+                  "  console.log('✅ User token saved');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -506,6 +514,7 @@
                   "const json = pm.response.json();",
                   "if (json.accessToken) {",
                   "  pm.collectionVariables.set('userToken', json.accessToken);",
+                  "  console.log('✅ User token refreshed');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -535,7 +544,7 @@
     },
 
     {
-      "name": "👤 User — Public Blog (Single Endpoint)",
+      "name": "👤 User — Public Blogs",
       "item": [
         {
           "name": "Get All Published Blogs (Public)",
@@ -551,6 +560,81 @@
             "method": "GET",
             "header": [],
             "url": { "raw": "{{baseUrl}}/user/blog/{{blogId}}", "host": ["{{baseUrl}}"], "path": ["user","blog","{{blogId}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User — Likes",
+      "item": [
+        {
+          "name": "Like / Unlike Blog (Toggle)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/user/blog/{{blogId}}/like", "host": ["{{baseUrl}}"], "path": ["user","blog","{{blogId}}","like"] },
+            "body": { "mode": "raw", "raw": "" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User — Comments",
+      "item": [
+        {
+          "name": "Get Comments on Blog (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/user/blog/{{blogId}}/comments", "host": ["{{baseUrl}}"], "path": ["user","blog","{{blogId}}","comments"] }
+          }
+        },
+        {
+          "name": "Post a Comment (Auth Required)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data._id) {",
+                  "  pm.collectionVariables.set('commentId', json.data._id);",
+                  "  console.log('✅ commentId saved:', json.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{userToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/user/blog/{{blogId}}/comments", "host": ["{{baseUrl}}"], "path": ["user","blog","{{blogId}}","comments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"This is a great blog post! Really insightful.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User — Categories",
+      "item": [
+        {
+          "name": "Get All Categories (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/user/category", "host": ["{{baseUrl}}"], "path": ["user","category"] }
           }
         }
       ]

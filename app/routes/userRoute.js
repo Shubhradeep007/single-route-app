@@ -15,10 +15,20 @@ router.route('/logout')
 router.route('/refresh-token')
   .post(userController.userRefreshToken)
 
+router.route('/category')
+  .get(userController.getCategories)
+
 router.route('/blog')
   .get(userController.publicBlogOperations)
 
 router.route('/blog/:id')
   .get(userController.publicBlogOperations)
+
+router.route('/blog/:id/like')
+  .post(userAuthCheck, userController.likeBlog)
+
+router.route('/blog/:id/comments')
+  .get(userController.getBlogComments)
+  .post(userAuthCheck, userController.commentOnBlog)
 
 module.exports = router
